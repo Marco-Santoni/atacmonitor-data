@@ -1,7 +1,8 @@
 import dotenv
 import os
 import datetime
-
+import psycopg2
+import urlparse
 # Python 2 import
 from xmlrpclib import Server
 
@@ -11,9 +12,41 @@ try:
 except Exception:
     pass
 
-def save(line, minutes, measured_at):
-    print line, minutes, measured_at
-    pass
+def get_database():
+    # url format: postgresql://username:password@host:port/database
+    settings = {}
+    result = urlparse.urlparse(
+        os.environ.get('DATABASE_URL')
+    )
+    settings['name'] = result.path[1:] or ''
+    settings['username'] = result.username or ''
+    settings['host'] = result.hostname or ''
+    settings['password'] = result.password or ''
+    settings['port'] = result.port or ''
+    return settings
+
+def get_connection(database):
+    return psycopg2.connect(
+        "dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
+            database['name'],
+            database['username'],
+            database['host'],
+            database['password'],
+            database['port']
+        )
+    )
+
+def save(line, minutes, created_at):
+    print line, minutes, created_at
+    database = get_database()
+    conn = get_connection(database)
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO arrivals (line, minutes, created_at) VALUES (%s, %s, %s);',
+        (line, minutes, created_at)
+    )
+    conn.commit()
+    conn.close()
 
 DEV_KEY = os.environ.get('DEV_KEY')
 
@@ -34,5 +67,5 @@ for p in res['risposta']['primi_per_palina']:
             minutes = None
         else:
             minutes = a['tempo_attesa']
-            
+
         save(line, minutes, rome_now)

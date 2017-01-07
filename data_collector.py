@@ -3,6 +3,7 @@ import os
 import datetime
 import psycopg2
 import urlparse
+import time
 # Python 2 import
 from xmlrpclib import Server
 
@@ -107,24 +108,23 @@ s2 = Server('http://muovi.roma.it/ws/xml/paline/7')
 
 token = s1.autenticazione.Accedi(DEV_KEY, '')
 
-now = datetime.datetime.utcnow()
-rome_now = now + datetime.timedelta(hours=2)
+while True:
+    res = s2.paline.Previsioni(token, '70638', 'it')
+    risposta = res['risposta']
+    print risposta
+    arr = Arrival(risposta['nome'], risposta['collocazione'])
+    for p in risposta['primi_per_palina']:
+        for a in p['arrivi']:
+            arr.linea = a.get('linea')
+            arr.tempo_attesa = a.get('tempo_attesa')
+            arr.tempo_attesa_secondi = a.get('tempo_attesa_secondi')
+            arr.distanza_fermate = a.get('distanza_fermate')
+            arr.id_palina = a.get('id_palina')
+            arr.nome_palina = a.get('nome_palina')
+            arr.collocazione = a.get('collocazione')
+            arr.capolinea = a.get('capolinea')
+            arr.in_arrivo = bool(a.get('in_arrivo'))
+            arr.a_capolinea = bool(a.get('a_capolinea'))
 
-res = s2.paline.Previsioni(token, '71427', 'it')
-risposta = res['risposta']
-print risposta
-arr = Arrival(risposta['nome'], risposta['collocazione'])
-for p in risposta['primi_per_palina']:
-    for a in p['arrivi']:
-        arr.linea = a.get('linea')
-        arr.tempo_attesa = a.get('tempo_attesa')
-        arr.tempo_attesa_secondi = a.get('tempo_attesa_secondi')
-        arr.distanza_fermate = a.get('distanza_fermate')
-        arr.id_palina = a.get('id_palina')
-        arr.nome_palina = a.get('nome_palina')
-        arr.collocazione = a.get('collocazione')
-        arr.capolinea = a.get('capolinea')
-        arr.in_arrivo = bool(a.get('in_arrivo'))
-        arr.a_capolinea = bool(a.get('a_capolinea'))
-
-        save(arr)
+            save(arr)
+    time.sleep(10)

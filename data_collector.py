@@ -36,17 +36,69 @@ def get_connection(database):
         )
     )
 
-def save(line, minutes, created_at):
-    print line, minutes, created_at
+def save(arrival):
     database = get_database()
     conn = get_connection(database)
     cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO arrivals (line, minutes, created_at) VALUES (%s, %s, %s);',
-        (line, minutes, created_at)
+        '''
+        INSERT INTO arrivals (
+            tempo_attesa,
+            tempo_attesa_secondi,
+            distanza_fermate,
+            linea,
+            id_palina,
+            nome_palina,
+            collocazione,
+            capolinea,
+            in_arrivo,
+            a_capolinea,
+            created_at
+        ) VALUES (
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            NOW()
+        );
+        ''',
+        (
+            arrival.tempo_attesa,
+            arrival.tempo_attesa_secondi,
+            arrival.distanza_fermate,
+            arrival.linea,
+            arrival.id_palina,
+            arrival.nome_palina,
+            arrival.collocazione,
+            arrival.capolinea,
+            arrival.in_arrivo,
+            arrival.a_capolinea
+        )
     )
     conn.commit()
     conn.close()
+
+class Arrival(object):
+
+    def __init__(self, nome, collocazione):
+        self.nome = nome #
+        self.collocazione = collocazione #
+        self.tempo_attesa = None
+        self.tempo_attesa_secondi = None
+        self.distanza_fermate = None
+        self.linea = None #
+        self.id_palina = None
+        self.nome_palina = None
+        self.collocazione = None
+        self.capolinea = None
+        self.in_arrivo = None
+        self.a_capolinea = None
 
 DEV_KEY = os.environ.get('DEV_KEY')
 
@@ -59,13 +111,20 @@ now = datetime.datetime.utcnow()
 rome_now = now + datetime.timedelta(hours=2)
 
 res = s2.paline.Previsioni(token, '71427', 'it')
-for p in res['risposta']['primi_per_palina']:
-    print 'Arrivi: ', len(p)
+risposta = res['risposta']
+print risposta
+arr = Arrival(risposta['nome'], risposta['collocazione'])
+for p in risposta['primi_per_palina']:
     for a in p['arrivi']:
-        line = a['linea']
-        if 'nessun_autobus' in a:
-            minutes = None
-        else:
-            minutes = a['tempo_attesa']
+        arr.linea = a.get('linea')
+        arr.tempo_attesa = a.get('tempo_attesa')
+        arr.tempo_attesa_secondi = a.get('tempo_attesa_secondi')
+        arr.distanza_fermate = a.get('distanza_fermate')
+        arr.id_palina = a.get('id_palina')
+        arr.nome_palina = a.get('nome_palina')
+        arr.collocazione = a.get('collocazione')
+        arr.capolinea = a.get('capolinea')
+        arr.in_arrivo = bool(a.get('in_arrivo'))
+        arr.a_capolinea = bool(a.get('a_capolinea'))
 
-        save(line, minutes, rome_now)
+        save(arr)

@@ -111,7 +111,6 @@ token = s1.autenticazione.Accedi(DEV_KEY, '')
 while True:
     res = s2.paline.Previsioni(token, '70638', 'it')
     risposta = res['risposta']
-    print risposta
     arr = Arrival(risposta['nome'], risposta['collocazione'])
     for p in risposta['primi_per_palina']:
         for a in p['arrivi']:
@@ -127,4 +126,4 @@ while True:
             arr.a_capolinea = bool(a.get('a_capolinea'))
 
             save(arr)
-    time.sleep(10)
+    time.sleep(int(os.environ.get('PULL_FREQUENCY')))

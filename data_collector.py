@@ -131,6 +131,6 @@ def store_palina(palina, token, server):
             arr.save()
 
 while True:
-    for palina in ['70638', '72074', '70200']:
+    for palina in ['70638', '72074', '70200', '82134', '70758']:
         store_palina(palina, token, s2)
     time.sleep(int(os.environ.get('PULL_FREQUENCY')))

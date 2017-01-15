@@ -2,10 +2,10 @@ import dotenv
 import os
 import datetime
 import psycopg2
-import urlparse
+import urllib.parse
 import time
-# Python 2 import
-from xmlrpclib import Server
+# Python 3 import
+from xmlrpc.client import Server
 
 try:
     PROJECT_PATH = os.path.dirname(os.path.dirname(__file__))
@@ -16,7 +16,7 @@ except Exception:
 def get_database():
     # url format: postgresql://username:password@host:port/database
     settings = {}
-    result = urlparse.urlparse(
+    result = urllib.parse.urlparse(
         os.environ.get('DATABASE_URL')
     )
     settings['name'] = result.path[1:] or ''
@@ -66,7 +66,7 @@ def save(arrival):
             %s,
             %s,
             %s,
-            NOW()
+            %s
         );
         ''',
         (
@@ -79,7 +79,8 @@ def save(arrival):
             arrival.collocazione,
             arrival.capolinea,
             arrival.in_arrivo,
-            arrival.a_capolinea
+            arrival.a_capolinea,
+            arrival.created_at
         )
     )
     conn.commit()
@@ -100,6 +101,7 @@ class Arrival(object):
         self.capolinea = None
         self.in_arrivo = None
         self.a_capolinea = None
+        self.created_at = None
 
 DEV_KEY = os.environ.get('DEV_KEY')
 
@@ -109,9 +111,11 @@ s2 = Server('http://muovi.roma.it/ws/xml/paline/7')
 token = s1.autenticazione.Accedi(DEV_KEY, '')
 
 while True:
+    timestamp = datetime.datetime.utcnow()
     res = s2.paline.Previsioni(token, '70638', 'it')
     risposta = res['risposta']
     arr = Arrival(risposta['nome'], risposta['collocazione'])
+    arr.created_at = timestamp
     for p in risposta['primi_per_palina']:
         for a in p['arrivi']:
             arr.linea = a.get('linea')

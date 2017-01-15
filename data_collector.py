@@ -37,55 +37,6 @@ def get_connection(database):
         )
     )
 
-def save(arrival):
-    database = get_database()
-    conn = get_connection(database)
-    cursor = conn.cursor()
-    cursor.execute(
-        '''
-        INSERT INTO arrivals (
-            tempo_attesa,
-            tempo_attesa_secondi,
-            distanza_fermate,
-            linea,
-            id_palina,
-            nome_palina,
-            collocazione,
-            capolinea,
-            in_arrivo,
-            a_capolinea,
-            created_at
-        ) VALUES (
-            %s,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s,
-            %s
-        );
-        ''',
-        (
-            arrival.tempo_attesa,
-            arrival.tempo_attesa_secondi,
-            arrival.distanza_fermate,
-            arrival.linea,
-            arrival.id_palina,
-            arrival.nome_palina,
-            arrival.collocazione,
-            arrival.capolinea,
-            arrival.in_arrivo,
-            arrival.a_capolinea,
-            arrival.created_at
-        )
-    )
-    conn.commit()
-    conn.close()
-
 class Arrival(object):
 
     def __init__(self, nome, collocazione):
@@ -103,6 +54,55 @@ class Arrival(object):
         self.a_capolinea = None
         self.created_at = None
 
+    def save(self):
+        database = get_database()
+        conn = get_connection(database)
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            INSERT INTO arrivals (
+                tempo_attesa,
+                tempo_attesa_secondi,
+                distanza_fermate,
+                linea,
+                id_palina,
+                nome_palina,
+                collocazione,
+                capolinea,
+                in_arrivo,
+                a_capolinea,
+                created_at
+            ) VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            );
+            ''',
+            (
+                self.tempo_attesa,
+                self.tempo_attesa_secondi,
+                self.distanza_fermate,
+                self.linea,
+                self.id_palina,
+                self.nome_palina,
+                self.collocazione,
+                self.capolinea,
+                self.in_arrivo,
+                self.a_capolinea,
+                self.created_at
+            )
+        )
+        conn.commit()
+        conn.close()
+
 DEV_KEY = os.environ.get('DEV_KEY')
 
 s1 = Server('http://muovi.roma.it/ws/xml/autenticazione/1')
@@ -110,25 +110,27 @@ s2 = Server('http://muovi.roma.it/ws/xml/paline/7')
 
 token = s1.autenticazione.Accedi(DEV_KEY, '')
 
+def store_palina(palina, token, server):
+    timestamp = datetime.datetime.utcnow()
+    res = server.paline.Previsioni(token, palina, 'it')
+    risposta = res['risposta']
+    arr = Arrival(risposta['nome'], risposta['collocazione'])
+    arr.created_at = timestamp
+    for p in risposta['primi_per_palina']:
+        for a in p['arrivi']:
+            arr.linea = a.get('linea')
+            arr.tempo_attesa = a.get('tempo_attesa')
+            arr.tempo_attesa_secondi = a.get('tempo_attesa_secondi')
+            arr.distanza_fermate = a.get('distanza_fermate')
+            arr.id_palina = a.get('id_palina')
+            arr.nome_palina = a.get('nome_palina')
+            arr.collocazione = a.get('collocazione')
+            arr.capolinea = a.get('capolinea')
+            arr.in_arrivo = bool(a.get('in_arrivo'))
+            arr.a_capolinea = bool(a.get('a_capolinea'))
+            arr.save()
+
 while True:
     for palina in ['70638', '72074', '70200']:
-        timestamp = datetime.datetime.utcnow()
-        res = s2.paline.Previsioni(token, palina, 'it')
-        risposta = res['risposta']
-        arr = Arrival(risposta['nome'], risposta['collocazione'])
-        arr.created_at = timestamp
-        for p in risposta['primi_per_palina']:
-            for a in p['arrivi']:
-                arr.linea = a.get('linea')
-                arr.tempo_attesa = a.get('tempo_attesa')
-                arr.tempo_attesa_secondi = a.get('tempo_attesa_secondi')
-                arr.distanza_fermate = a.get('distanza_fermate')
-                arr.id_palina = a.get('id_palina')
-                arr.nome_palina = a.get('nome_palina')
-                arr.collocazione = a.get('collocazione')
-                arr.capolinea = a.get('capolinea')
-                arr.in_arrivo = bool(a.get('in_arrivo'))
-                arr.a_capolinea = bool(a.get('a_capolinea'))
-
-                save(arr)
+        store_palina(palina, token, s2)
     time.sleep(int(os.environ.get('PULL_FREQUENCY')))

@@ -111,7 +111,7 @@ s2 = Server('http://muovi.roma.it/ws/xml/paline/7')
 token = s1.autenticazione.Accedi(DEV_KEY, '')
 
 while True:
-    for palina in ['70638', '72074', '70200']
+    for palina in ['70638', '72074', '70200']:
         timestamp = datetime.datetime.utcnow()
         res = s2.paline.Previsioni(token, palina, 'it')
         risposta = res['risposta']

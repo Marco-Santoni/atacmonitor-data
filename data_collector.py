@@ -4,6 +4,7 @@ import datetime
 import psycopg2
 import urllib.parse
 import time
+import _thread
 # Python 3 import
 from xmlrpc.client import Server
 
@@ -105,11 +106,6 @@ class Arrival(object):
 
 DEV_KEY = os.environ.get('DEV_KEY')
 
-s1 = Server('http://muovi.roma.it/ws/xml/autenticazione/1')
-s2 = Server('http://muovi.roma.it/ws/xml/paline/7')
-
-token = s1.autenticazione.Accedi(DEV_KEY, '')
-
 def store_palina(palina, token, server):
     timestamp = datetime.datetime.utcnow()
     res = server.paline.Previsioni(token, palina, 'it')
@@ -130,7 +126,18 @@ def store_palina(palina, token, server):
             arr.a_capolinea = bool(a.get('a_capolinea'))
             arr.save()
 
+palina_list = ['70638', '72074', '70200', '82134', '70758']
+s1 = Server('http://muovi.roma.it/ws/xml/autenticazione/1')
+palina_2_token = {
+    palina: s1.autenticazione.Accedi(DEV_KEY, palina) for palina in palina_list
+}
+palina_2_server = {
+    palina: Server('http://muovi.roma.it/ws/xml/paline/7')
+    for palina in palina_list
+}
+
 while True:
-    for palina in ['70638', '72074', '70200', '82134', '70758']:
-        store_palina(palina, token, s2)
+    for palina, token in palina_2_token.items():
+        server = palina_2_server[palina]
+        _thread.start_new_thread(store_palina, (palina, token, server, ))
     time.sleep(int(os.environ.get('PULL_FREQUENCY')))

@@ -7,8 +7,7 @@ def save(bus_arrival):
     collection = db['arrivals']
     collection.insert(bus_arrival)
 
-
-def process(atac_response):
+def process(atac_response, utctimestmap):
     """
     Loads the response by ATAC API, loops over the first arrivals for each line. Then, stores the arrival.
     Input:
@@ -17,4 +16,5 @@ def process(atac_response):
     response = atac_response['risposta']
     for palina in response['primi_per_palina']:
         for bus_arrival in palina['arrivi']:
+            bus_arrival['utctimestamp'] = utctimestmap
             save(bus_arrival)

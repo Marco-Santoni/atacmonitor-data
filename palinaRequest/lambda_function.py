@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 from xmlrpc.client import Server
@@ -15,8 +16,9 @@ def lambda_handler(event, context):
     """
     body = event['body']
     server = Server(os.environ['PALINA_URL'])
+    ts = datetime.datetime.utcnow()
     res = server.paline.Previsioni(body['token'], body['id_palina'], 'it')
-    arrival.process(res)
+    arrival.process(res, ts)
     return {
         'statusCode': 200,
         'body': 'DONE'

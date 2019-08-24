@@ -18,6 +18,6 @@ Create zip file and upload to aws:
 cd palinaRequest/lib/python3.7/site-packages
 zip -r9 ${OLDPWD}/function.zip .
 cd $OLDPWD
-zip -g function.zip function.py
+zip -g function.zip lambda_function.py arrival.py
 aws lambda update-function-code --function-name palinaRequest --zip-file fileb://function.zip
 ```

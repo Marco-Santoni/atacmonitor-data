@@ -1,5 +1,7 @@
 ## palinaRequest
 
+This service is an API that takes as input an id_palina. It sends the request to Romamobilita about the current expected arrivals, and it stores the results
+
 [AWS Ref](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html)
 
 Create the virtual env and install dependencies:
@@ -20,4 +22,14 @@ zip -r9 ${OLDPWD}/function.zip .
 cd $OLDPWD
 zip -g function.zip lambda_function.py arrival.py
 aws lambda update-function-code --function-name palinaRequest --zip-file fileb://function.zip
+```
+
+## palinaList
+
+This service is an API that provides the full list of id_palina.
+
+```
+cd palinaList
+zip function.zip lambda_function.py
+aws lambda update-function-code --function-name palinaList --zip-file fileb://function.zip
 ```

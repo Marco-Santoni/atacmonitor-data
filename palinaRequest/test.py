@@ -1,5 +1,5 @@
 import unittest
-from xmlrpc.client import Server, Fault
+from xmlrpc.client import Server
 from unittest.mock import patch
 import os
 
@@ -32,8 +32,9 @@ class TestPalinaRequest(unittest.TestCase):
                 'id_palina': 'FOO_PALINA'
             }
         }
-        with self.assertRaises(Fault):
-            lambda_handler(missing_palina, self.context)
+        res = lambda_handler(missing_palina, self.context)
+        assert(res['statusCode'] == 200)
+        assert(res['body'] == 'INVALID PALINA')
 
 if __name__ == '__main__':
     unittest.main()

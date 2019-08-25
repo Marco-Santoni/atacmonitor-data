@@ -13,7 +13,7 @@ class TestPalinaRequest(unittest.TestCase):
         self.event = {
             'body': {
                 'token': token,
-                'id_palina': '20037'
+                'id_palina': '10037'
             }
         }
         self.context = None

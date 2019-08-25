@@ -15,7 +15,8 @@ def lambda_handler(event, context):
         }
     """
     body = event['body']
-    server = Server(os.environ['PALINA_URL'])
+    print('Request for palina {}'.format(body['id_palina']))
+    server = Server(os.environ['PALINA_URL'], use_builtin_types=True)
     ts = datetime.datetime.utcnow()
     res = server.paline.Previsioni(body['token'], body['id_palina'], 'it')
     arrival.process(res, ts)

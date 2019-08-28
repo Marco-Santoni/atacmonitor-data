@@ -6,6 +6,7 @@ def save(bus_arrival):
     db = client.test
     collection = db['arrivals']
     collection.insert(bus_arrival)
+    client.close()
 
 def process(atac_response, utctimestmap):
     """

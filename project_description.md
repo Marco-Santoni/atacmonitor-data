@@ -1,4 +1,4 @@
-![example image](/img_example_line_040.png)
+![example image](https://raw.githubusercontent.com/Marco-Santoni/atacmonitor-data/master/img/example_line_040.png)
 
 [Atacmonitor](www.atacmonitor.com) measures the performance of public transport in Rome. It collects every 3 minutes the waiting times at more than 500 stations within the city. The project is open source and is already running on AWS and MongoDB Atlas cloud platforms.
 
